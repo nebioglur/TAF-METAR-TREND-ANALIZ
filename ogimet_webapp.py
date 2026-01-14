@@ -173,15 +173,15 @@ def analyze_dataframe(df):
                 
                 detay_str = ""
                 if "UYUMSUZ" in status_code:
-                    detay_str = "1- UYUMSUZLUK NEDENİ:\n" + "\n".join([f"• {r}" for r in reasons])
-                    detay_str += "\n\n2- TREND KONTROLÜ:\n• Trend ile de uyum sağlanamadı."
-                    detay_str += "\n\n3- SONUÇ:\n• ❌ UYUMSUZ"
+                    detay_str = "**1- UYUMSUZLUK NEDENİ:**\n" + "\n".join([f"- {r}" for r in reasons])
+                    detay_str += "\n\n**2- TREND KONTROLÜ:**\n- Trend ile de uyum sağlanamadı."
+                    detay_str += "\n\n**3- SONUÇ:**\n- ❌ **UYUMSUZ**"
                 elif "DİKKAT" in status_code:
-                    detay_str = "1- UYUMSUZLUK NEDENİ (Ana METAR):\n" + "\n".join([f"• {r}" for r in reasons])
-                    detay_str += "\n\n2- TREND KONTROLÜ:\n• ✅ METAR Trendi TAF limitlerine giriyor."
-                    detay_str += "\n\n3- SONUÇ:\n• ⚠️ DİKKAT (Trend ile uyumlu)"
+                    detay_str = "**1- UYUMSUZLUK NEDENİ (Ana METAR):**\n" + "\n".join([f"- {r}" for r in reasons])
+                    detay_str += "\n\n**2- TREND KONTROLÜ:**\n- ✅ METAR Trendi TAF limitlerine giriyor."
+                    detay_str += "\n\n**3- SONUÇ:**\n- ⚠️ **DİKKAT** (Trend ile uyumlu)"
                 elif "UYUMLU" in status_code:
-                    detay_str = "✅ UYUMLU"
+                    detay_str = "✅ **UYUMLU**"
 
                 if amd_msgs:
                     detay_str += f"\n\n👉 KRİTİK TAVSİYE:\n• TAF AMD YAYINLANMALI!\n  Aynı sapma 3+ kez tekrarlandı: {', '.join(amd_msgs)}"
@@ -249,7 +249,8 @@ if st.session_state.analiz_sonucu is not None:
         with col_chart:
             fig = px.pie(uyum_counts, values='Adet', names='Durum', 
                          color='Durum', color_discrete_map=color_map,
-                         hole=0.4)
+                         hole=0.4, title="Analiz Sonuç Dağılımı")
+            fig.update_traces(textinfo='value+percent', textfont_size=12)
             fig.update_layout(height=350, margin=dict(t=10, b=10, l=10, r=10))
             st.plotly_chart(fig, use_container_width=True)
         with col_stats:
@@ -283,11 +284,11 @@ if st.session_state.analiz_sonucu is not None:
     )
     
     # Detaylar
-    with st.expander("Detaylı Analiz Raporu"):
-        for _, row in df.iterrows():
-            if row["_detay"]:
-                st.markdown(f"### 📅 {row['date']} | {row['Türü']}")
-                
+    st.subheader("Detaylı Analiz Raporu")
+    for _, row in df.iterrows():
+        if row["_detay"]:
+            label = f"{row['_uyum']} | {row['date']} | {row['Türü']}"
+            with st.expander(label, expanded=("UYUMSUZ" in row["_uyum"])):
                 c1, c2 = st.columns(2)
                 with c1:
                     st.caption("METAR / SPECI")
@@ -304,5 +305,3 @@ if st.session_state.analiz_sonucu is not None:
                     st.success(row["_detay"], icon="✅")
                 else:
                     st.info(row["_detay"])
-                
-                st.divider()
